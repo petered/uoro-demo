@@ -1,6 +1,12 @@
 
 # uoro-demo
 
+A Pytorch implementation of [Unbiased Online Recurrent Optimization](https://arxiv.org/abs/1702.05043); Corentin Tallec, Yann Ollivier.
+
+The main file to run is `demo_uoro/demo_uoro_anbn.py`.
+
+---
+
 To set up this repo, go:
 
 ```
@@ -8,6 +14,7 @@ git clone https://github.com/petered/uoro-demo.git
 cd uoro-demo
 source setup.sh
 ```
+(You'll be prompted to setup pytorch manually depending on your system).
 
 Or to be able to import this code in an existing Python environment, go:
 
