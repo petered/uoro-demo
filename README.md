@@ -1,7 +1,7 @@
 
 # uoro-demo
 
-A Pytorch implementation of [Unbiased Online Recurrent Optimization](https://arxiv.org/abs/1702.05043); Corentin Tallec, Yann Ollivier.
+A PyTorch implementation of [Unbiased Online Recurrent Optimization](https://arxiv.org/abs/1702.05043); Corentin Tallec, Yann Ollivier.
 
 The main file to run is `demo_uoro/demo_uoro_anbn.py`.
 
