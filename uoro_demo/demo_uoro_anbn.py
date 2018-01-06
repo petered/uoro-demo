@@ -99,12 +99,9 @@ def compare_records(records, subsample_threshold = 10000):
 @ExperimentFunction(show=show_this_record, compare=compare_records, is_root=True)
 def demo_anbn_prediction(
         n_training_steps = 100000,
-        n_test_steps = None,
         k=1,
         l=32,
-        n_in=3,
         n_hid=64,
-        n_out=3,
         predictor_type ='uoro',
         predictor_options = {},
         rnn_type='GRUPredictor',
@@ -117,6 +114,25 @@ def demo_anbn_prediction(
         alpha = 3e-2,
         seed=1234,
         ):
+    """
+    :param n_training_steps:
+    :param k: k parameter of anan dataset... minimum sequence length
+    :param l: l parameter of anan dataset... maximum sequence length
+    :param n_hid:
+    :param predictor_type: Either 'rtrl' or 'ouro'
+    :param predictor_options: Additional kwargs to pass to predictor constructor
+    :param rnn_type: 'gru', 'lstm', or 'elman'  (note.... some may be broken now)
+    :param rnn_options: Additional kwargs to pass to RNN constructor
+    :param optimizer: Optimizer type 'sgd', 'adam', 'rmsprop'...
+    :param learning_rate: Initial learning rate
+    :param n_splits: (ignore this?)
+    :param error_func: String identifying function to report error.  'xe' is cross-entropy, 'xebits' is cross-entropy in bits, 'mse', ...
+    :param loss: String identifying function to compute loss
+    :param alpha: Controls decay of learning rate lr[t] = lr/(1+alpha*sqrt(t))
+    :param seed: Random seed
+    :yield: A data structure containing learning curve data.  Inspect it if you need it, or just inspect results using 'compare'
+        command in experiment ui.
+    """
 
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -129,8 +145,8 @@ def demo_anbn_prediction(
     if alpha is not None:
         predictor_options['learning_rate_generator'] = (learning_rate/(1.+alpha*np.sqrt(t)) for t in itertools.count(0))
 
-    x_train, y_train = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=n_test_steps, k=k, l=l, onehot_inputs=True, onehot_target=False)
-    assert n_in==3 and n_out==3
+    x_train, y_train = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=None, k=k, l=l, onehot_inputs=True, onehot_target=False)
+    n_in = n_out = 3
 
     net = get_online_predictor(n_in=n_in, n_hid=n_hid, n_out=n_out, predictor_type=predictor_type, rnn_type=rnn_type, rnn_options=rnn_options, loss=loss,
                                optimizer=optimizer, learning_rate=learning_rate, predictor_options=predictor_options,
