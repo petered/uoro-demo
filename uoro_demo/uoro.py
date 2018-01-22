@@ -8,11 +8,6 @@ from uoro_demo.torch_utils.training import create_loss_function, get_named_torch
 from uoro_demo.torch_utils.variable_workshop import MergedVariable, make_single_module_parameter
 
 
-def random_nu_generator(size):
-    while True:
-        yield Variable(torch.round(torch.rand(*size))*2-1)
-
-
 class UOROVec(TrainableStatefulModule):
     """
     An implementation of Unbiased Online Recurrent Optimization
@@ -80,9 +75,7 @@ class UOROVec(TrainableStatefulModule):
         state_vec_new_perturbed = MergedVariable.join(self.forward_update_module(x, state_old_perturbed)[1])
         state_deriv_in_direction_s_toupee = (state_vec_new_perturbed - state_vec_new)/self.epsilon_perturbation
 
-        if self.nu_gen is None:
-            self.nu_gen = random_nu_generator(state_vec_old.size())
-        nus = next(self.nu_gen)
+        nus = Variable(torch.round(torch.rand(*state_vec_old.size()))*2-1)
 
         # Backprop nus through the rnn
         direct_theta_toupee_contribution, = grad(outputs=state_vec_new, inputs=self.theta, grad_outputs=nus)
