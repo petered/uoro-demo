@@ -39,7 +39,6 @@ class UOROVec(TrainableStatefulModule):
         self.epsilon_perturbation = epsilon_perturbation
         self.epsilon_stability = epsilon_stability
         self.optimizer = optimizer_factory([self.theta])
-        self.nu_gen = None
         self.learning_rate_generator = learning_rate_generator
 
     def _initialize_state(self, x):
