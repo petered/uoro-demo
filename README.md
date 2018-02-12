@@ -3,7 +3,7 @@
 
 A PyTorch implementation of [Unbiased Online Recurrent Optimization](https://arxiv.org/abs/1702.05043); Corentin Tallec, Yann Ollivier.
 
-The main file to run is `demo_uoro/demo_uoro_anbn.py`.
+The main file to run is `demo_uoro/demo_uoro_anbn.py`.  This compares UORO and RTRL on the a^n b^n dataset.
 
 ---
 
