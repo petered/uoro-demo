@@ -104,7 +104,7 @@ def magically_torchify_everything():
     :return:
     """
     parent_namespace = inspect.currentframe().f_back.f_back.f_locals
-    print parent_namespace.keys()
+    print(parent_namespace.keys())
 
     torchified_namespace = numpy_struct_to_torch_struct(parent_namespace)
 
@@ -126,12 +126,12 @@ def torch_loop(func, *args):
 
     first_out = func(*(a[0] for a in args))
     if first_out is None:
-        for i in xrange(1, n_steps):
+        for i in range(1, n_steps):
             func(*(a[i] for a in args))
     else:
         # Should probably assert that it's a tensor
         out_tensor = torch.autograd.Variable(torch.zeros(n_steps, *first_out.size()))
         out_tensor[0] = first_out
-        for i in xrange(1, n_steps):
+        for i in range(1, n_steps):
             out_tensor[i] = func(*(a[i] for a in args))
         return out_tensor

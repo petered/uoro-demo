@@ -45,12 +45,12 @@ def show_this_record(record, scale='normal'):
     result = record.get_result()
     args = record.get_args()
 
-    n_training_steps = result['checkpoints']['iter'][-1] if 'checkpoints' in result else args['n_training_steps']
+    n_training_steps = result['checkpoints', -1, 'iter'] if 'checkpoints' in result else args['n_training_steps']
 
-    data = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=args['n_test_steps'], k=args['k'], l=args['l'], onehot_inputs=True, onehot_target=False)
+    data = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=args['n_training_steps'], k=args['k'], l=args['l'], onehot_inputs=True, onehot_target=False)
     y_train = data[1]
-    print 'Prediction: '+ str(np.argmax(result['output'][-100:], axis=1)).replace('\n', '')
-    print 'Truth:      '+str(y_train[-100:]).replace('\n', '')
+    print('Prediction: '+ str(np.argmax(result['output', -100:], axis=1)).replace('\n', ''))
+    print('Truth:      '+str(y_train[-100:]).replace('\n', ''))
 
     # Now, just find how it did at predicting the 0's at the end of sequences.
     correct_endings = _get_correct_endings(predictions=np.argmax(result['output'], axis=1), y_train=y_train)
@@ -78,14 +78,14 @@ def compare_records(records, subsample_threshold = 10000):
     all_args = [rec.get_args() for rec in records]
     names = uniquify_duplicates([args['predictor_type'] for args in all_args])
     try:
-        print tabulate([[name, result['checkpoints']['iter'][-1]/result['checkpoints']['runtime'][-1]] for result, name in zip(results_dict.values(), names)], headers=['Name', 'Iter/s'])
+        print(tabulate([[name, result['checkpoints', -1, 'iter']/result['checkpoints', -1, 'runtime']] for result, name in zip(results_dict.values(), names)], headers=['Name', 'Iter/s']))
     except KeyError:
-        print "You have some old records that don't have checkpoints"
-    n_training_steps = max(result['checkpoints']['iter'][-1] if 'checkpoints' in result else args['n_training_steps'] for result, args in zip(results_dict.values(), all_args))
+        print("You have some old records that don't have checkpoints")
+    n_training_steps = max(result['checkpoints', -1, 'iter'] if 'checkpoints' in result else args['n_training_steps'] for result, args in zip(results_dict.values(), all_args))
     args = records[0].get_args()
-    data = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=args['n_test_steps'], k=args['k'], l=args['l'], onehot_inputs=True, onehot_target=False)
+    data = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=args['n_training_steps'], k=args['k'], l=args['l'], onehot_inputs=True, onehot_target=False)
     y_train = data[1]
-    errors = [v['online_errors'] for v in results_dict.values()]
+    errors = [v['online_errors'].to_array() for v in results_dict.values()]
     correct_ends = [_get_correct_endings(np.argmax(v['output'], axis=1), y_train) for v in results_dict.values()]
 
     plt.figure()
@@ -162,7 +162,7 @@ def demo_anbn_prediction(
             online_test_reporter = 'recent',
             checkpoint_generator=('exp', 1000, 0.1)
             ):
-        print 'Yielding Result at {} iterations.'.format(result['checkpoints']['iter'][-1])
+        print('Yielding Result at {} iterations.'.format(result['checkpoints', -1, 'iter']))
         yield result
 
 
@@ -181,3 +181,6 @@ for XX in [X1, X2, X3, X4]:
 if __name__ == '__main__':
 
     demo_anbn_prediction.browse(display_format='flat', filterexp='has:insane', filterrec = 'result@last')
+    # You can run both experiments in parallel with 'run all -p'
+    # Later, when records have been saved, you can view results with 'compare all'
+    # You can also just run demo_anbn_prediction() alone if you don't want to bother with saving results.

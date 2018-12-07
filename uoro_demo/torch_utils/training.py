@@ -10,10 +10,11 @@ from torch.autograd import grad
 import time
 
 from artemis.general.display import sensible_str, deepstr
+from artemis.general.duck import Duck
 from artemis.general.nested_structures import seqstruct_to_structseq, nested_map
 from artemis.general.progress_indicator import ProgressIndicator
 from artemis.general.should_be_builtins import bad_value
-from artemis.ml.tools.processors import RunningAverage, RecentRunningAverage
+from artemis.ml.tools.running_averages import RunningAverage, RecentRunningAverage
 from uoro_demo.torch_utils.torch_helpers import numpy_struct_to_torch_struct, torch_loop
 
 
@@ -110,15 +111,17 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
         else:
             raise Exception("Can't make a checkpoint generator {}".format(checkpoint_generator))
 
-    if isinstance(error_func, basestring):
+    if isinstance(error_func, str):
         error_func = create_loss_function(error_func)
 
     n_training_samples = len(x_train)
-    test_iterations = [int(n_training_samples * i / float(n_tests - 1)) for i in xrange(0, n_tests)]
+    test_iterations = [int(n_training_samples * i / float(n_tests - 1)) for i in range(0, n_tests)]
 
     initial_state = model.get_state()
 
-    results = SequentialStructBuilder()
+    # results = SequentialStructBuilder()
+
+    results = Duck()
 
     if test_online:
         loss_accumulator = RunningAverage() if online_test_reporter=='cum' else RecentRunningAverage() if online_test_reporter=='recent' else lambda x: x if online_test_reporter is None else bad_value(online_test_reporter)
@@ -128,7 +131,7 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
     err = np.nan
     pi = ProgressIndicator(n_training_samples+1, update_every=(print_every, 'seconds'), show_total=True,
         post_info_callback=lambda: 'Iteration {} of {}. Online {} Error: {}'.format(t, len(x_train), online_test_reporter, err))
-    for t in xrange(n_training_samples+1):
+    for t in range(n_training_samples+1):
 
         if offline_test_mode is not None and t in test_iterations:
             training_state = model.get_state()
@@ -144,17 +147,19 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
                 test_err = error_func(_flatten_first_2(y_test_guess), _flatten_first_2(y_test)).data.numpy()[0]
 
                 # train_err, test_err = tuple((y_guess - y_truth).abs().sum().data.numpy() for y_guess, y_truth in [(y_train_guess, y_train[:t] if t>0 else torch.zeros(2, 2, 2)/0), (y_test_guess, y_test)])
-                print 'Iteration {} of {}: Training: {:.3g}, Test: {:.3g}'.format(t, len(x_train), train_err, test_err)
-                results['offline_errors']['t'].next = t
-                results['offline_errors']['train'].next = train_err
-                results['offline_errors']['test'].next = test_err
+                print('Iteration {} of {}: Training: {:.3g}, Test: {:.3g}'.format(t, len(x_train), train_err, test_err))
+                results['offline_errors', next, :] = dict(t=t, train=train_err, test=test_err)
+                # results['offline_errors']['t'].next = t
+                # results['offline_errors']['train'].next = train_err
+                # results['offline_errors']['test'].next = test_err
 
             elif offline_test_mode == 'cold_test':
                 y_test_guess = torch_loop(model, x_test)
                 test_err = error_func(_flatten_first_2(y_test_guess), _flatten_first_2(y_test)).data.numpy()[0]
-                print 'Iteration {} of {}: Test: {:.3g}'.format(t, len(x_train), test_err)
-                results['offline_errors']['t'].next = t
-                results['offline_errors']['test'].next = test_err
+                print('Iteration {} of {}: Test: {:.3g}'.format(t, len(x_train), test_err))
+                results['offline_errors', next, :] = dict(t=t, test=test_err)
+                # results['offline_errors']['t'].next = t
+                # results['offline_errors']['test'].next = test_err
             else:
                 raise Exception('No test_mode: {}'.format(offline_test_mode))
             model.set_state(training_state)
@@ -162,21 +167,21 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
         if t<n_training_samples:
             out = model.train_it(x_train[t], y_train[t])
             if return_output:
-                results['output'].next = out.data.numpy()[0]
+                results['output', next] = out.data.numpy()[0]
             if test_online:
                 # print 'Out: {}, Correct: {}'.format(np.argmax(out.data.numpy(), axis=1), torch_str(y_train[t]))
-                this_loss = error_func(out, y_train[t]).data.numpy()[0]
+                this_loss = error_func(out, y_train[t]).item()
                 err = loss_accumulator(this_loss)
-                results['online_errors'].next = this_loss
+                results['online_errors', next] = this_loss
                 if online_test_reporter is not None:
-                    results['smooth_online_errors'][online_test_reporter].next = err
+                    results['smooth_online_errors', online_test_reporter, next] = err
                 # if t in test_iterations:
                 #     print('Iteration {} of {} Online {} Error: {}'.format(t, len(x_train), online_test_reporter, err))
 
         pi()
         if t>=next_checkpoint or t==n_training_samples:
-            results['checkpoints'].next = {'iter': t, 'runtime': time.time()-t_start}
-            yield results.to_structseq(as_arrays=True)
+            results['checkpoints', next, :] = {'iter': t, 'runtime': time.time()-t_start}
+            yield results
             next_checkpoint = next(checkpoint_generator)
             # yield nested_map(lambda x: np.array(x), results, is_container_func=lambda x: isinstance(x, dict))
 
@@ -295,7 +300,7 @@ class SequentialStructBuilder(object):
         return '{}({})'.format(self.__class__.__name__, sensible_str(self._struct))
 
     def description(self):
-        print self.__class__.__name__ +":" + deepstr(self.to_struct())
+        print(self.__class__.__name__ +":" + deepstr(self.to_struct()))
 
     def values(self):
         return self if self.is_sequence else self._struct.values()

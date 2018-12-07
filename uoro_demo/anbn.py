@@ -68,7 +68,7 @@ def get_correct_anbn_predictions(predictions, y_train, return_indeces = False):
 
 if __name__ == '__main__':
     x_train, y_train, x_test, y_test = get_an_bn_prediction_dataset(100, split_point=2./3, k=1, l=4)
-    print 'x_train: {}'.format(list(x_train))
-    print 'y_train: {}'.format(list(y_train))
-    print 'x_test:  {}'.format(list(x_test))
-    print 'y_test:  {}'.format(list(y_test))
+    print ('x_train: {}'.format(list(x_train)))
+    print ('y_train: {}'.format(list(y_train)))
+    print ('x_test:  {}'.format(list(x_test)) )
+    print ('y_test:  {}'.format(list(y_test)) )

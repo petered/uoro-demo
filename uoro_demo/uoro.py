@@ -67,7 +67,7 @@ class UOROVec(TrainableStatefulModule):
             self.theta_toupee = Variable(torch.zeros(*self.theta.size()))  # (n_params, )
 
         indirect_grad = (dl_dstate_old*self.s_toupee).sum()*self.theta_toupee
-        pseudograds = indirect_grad + dl_dtheta_direct
+        pseudograds = indirect_grad + dl_dtheta_direct  # (n_params, )
 
         # Do ForwardDiff pass
         state_old_perturbed = state_vec_old.cleave(state_vec_old + self.s_toupee * self.epsilon_perturbation)#.detach()

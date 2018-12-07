@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from torch.autograd import Variable
 from torch.nn import Parameter
 
 from artemis.general.nested_structures import NestedType, nested_map
@@ -80,7 +79,7 @@ class JoinCleave(object):
         return x_reassembled
 
 
-class MergedVariable(Variable):
+class MergedVariable(torch.Tensor):
 
     @staticmethod
     def join(vars, dim=0, requires_grad=False, as_leaf = False):
@@ -89,7 +88,7 @@ class MergedVariable(Variable):
         merged_var = join_split.join(vars)
 
         if as_leaf:
-            merged_var = Variable(merged_var.data, requires_grad=requires_grad)
+            merged_var = torch.tensor(merged_var.data, requires_grad=requires_grad)
 
         merged_var.__class__ = MergedVariable
         merged_var._join_split = join_split
