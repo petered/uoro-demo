@@ -1,4 +1,4 @@
 numpy
 matplotlib
 -e git+http://github.com/QUVA-Lab/artemis.git#egg=artemis
-pytorch
+torch
