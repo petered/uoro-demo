@@ -4,8 +4,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 from artemis.experiments.experiment_record_view import separate_common_args
 from artemis.general.should_be_builtins import bad_value
-from artemis.ml.tools.running_averages import RunningAverage, RecentRunningAverage
 from artemis.plotting.pyplot_plus import get_lines_color_cycle
+
+from src.artemis.artemis.ml.tools.processors import RunningAverage, RecentRunningAverage
 
 
 def plot_learning_curve(train_test_errors, scale='loglog'):

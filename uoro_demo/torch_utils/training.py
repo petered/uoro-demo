@@ -14,7 +14,8 @@ from artemis.general.duck import Duck
 from artemis.general.nested_structures import seqstruct_to_structseq, nested_map
 from artemis.general.progress_indicator import ProgressIndicator
 from artemis.general.should_be_builtins import bad_value
-from artemis.ml.tools.running_averages import RunningAverage, RecentRunningAverage
+
+from src.artemis.artemis.ml.tools.processors import RunningAverage, RecentRunningAverage
 from uoro_demo.torch_utils.torch_helpers import numpy_struct_to_torch_struct, torch_loop
 
 
@@ -133,9 +134,9 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
         post_info_callback=lambda: 'Iteration {} of {}. Online {} Error: {}'.format(t, len(x_train), online_test_reporter, err))
     for t in range(n_training_samples+1):
 
-        if offline_test_mode is not None and t in test_iterations:
+        if offline_test_mode is not None and t>=next_checkpoint or t==n_training_samples:
             training_state = model.get_state()
-            model.set_state(initial_state)
+            # model.set_state(initial_state)  # This line should not have been here
 
             if offline_test_mode == 'full_pass':
                 y_train_guess = torch_loop(model, x_train[:t]) if t > 0 else None
@@ -155,11 +156,9 @@ def train_online_network_checkpoints(model, dataset, checkpoint_generator = None
 
             elif offline_test_mode == 'cold_test':
                 y_test_guess = torch_loop(model, x_test)
-                test_err = error_func(_flatten_first_2(y_test_guess), _flatten_first_2(y_test)).data.numpy()[0]
+                test_err = float(error_func(_flatten_first_2(y_test_guess), _flatten_first_2(y_test)).data.numpy())
                 print('Iteration {} of {}: Test: {:.3g}'.format(t, len(x_train), test_err))
                 results['offline_errors', next, :] = dict(t=t, test=test_err)
-                # results['offline_errors']['t'].next = t
-                # results['offline_errors']['test'].next = test_err
             else:
                 raise Exception('No test_mode: {}'.format(offline_test_mode))
             model.set_state(training_state)

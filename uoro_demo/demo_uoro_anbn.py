@@ -99,6 +99,7 @@ def compare_records(records, subsample_threshold = 10000):
 @ExperimentFunction(show=show_this_record, compare=compare_records, is_root=True)
 def demo_anbn_prediction(
         n_training_steps = 100000,
+        n_test_steps = 1000,
         k=1,
         l=32,
         n_hid=64,
@@ -108,7 +109,7 @@ def demo_anbn_prediction(
         rnn_options = dict(bias=False),
         optimizer='adam',
         learning_rate = 0.001,
-        n_splits=10,
+        n_splits=1000,
         error_func ='xebits',
         loss='xe',
         alpha = 3e-2,
@@ -145,7 +146,7 @@ def demo_anbn_prediction(
     if alpha is not None:
         predictor_options['learning_rate_generator'] = (learning_rate/(1.+alpha*np.sqrt(t)) for t in itertools.count(0))
 
-    x_train, y_train = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=None, k=k, l=l, onehot_inputs=True, onehot_target=False)
+    x_train, y_train, x_test, y_test = get_an_bn_prediction_dataset(n_training_steps=n_training_steps, n_test_steps=n_test_steps, k=k, l=l, onehot_inputs=True, onehot_target=False)
     n_in = n_out = 3
 
     net = get_online_predictor(n_in=n_in, n_hid=n_hid, n_out=n_out, predictor_type=predictor_type, rnn_type=rnn_type, rnn_options=rnn_options, loss=loss,
@@ -154,13 +155,14 @@ def demo_anbn_prediction(
 
     for result in train_online_network_checkpoints(
             model = net,
-            dataset = (x_train, y_train),
+            dataset = (x_train, y_train, x_test, y_test),
             n_tests= n_splits,
             error_func=error_func,
             batchify=True,
             test_online=True,
             online_test_reporter = 'recent',
-            checkpoint_generator=('exp', 1000, 0.1)
+            checkpoint_generator=('exp', 1000, 0.1),
+            offline_test_mode='cold_test'
             ):
         print('Yielding Result at {} iterations.'.format(result['checkpoints', -1, 'iter']))
         yield result
